@@ -17,6 +17,7 @@ class GameScene: SKScene {
     var enemy = SKSpriteNode()
     
     var fireTimer = Timer()
+    var enemyTimer = Timer()
     
     override func didMove(to view: SKView) {
         scene?.size = CGSize(width: 750, height: 1335)
@@ -28,6 +29,8 @@ class GameScene: SKScene {
         makePlayer(playerCh: 1)
         
         fireTimer = .scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(playerFireFunction), userInfo: nil, repeats: true)
+        
+        enemyTimer = .scheduledTimer(timeInterval: 1, target: self, selector: #selector(makeEnemy), userInfo: nil, repeats: true)
     }
     
     func makePlayer(playerCh: Int) {
@@ -63,7 +66,23 @@ class GameScene: SKScene {
         playerFire.run(combine)
     }
     
-    @objc func makeEnemies() {}
+    @objc func makeEnemy() {
+        let randomNumber = GKRandomDistribution(lowestValue: 50, highestValue: 700)
+        
+        enemy = .init(imageNamed: "ship_3")
+        enemy.position = CGPoint(x: randomNumber.nextInt(), y: 1400)
+        enemy.zPosition = 5
+        enemy.setScale(2.8)
+        enemy.zRotation = 3.14159
+
+        addChild(enemy)
+        
+        let moveAction = SKAction.moveTo(y: -100, duration: 3)
+        let deleteAction = SKAction.removeFromParent()
+        let combine = SKAction.sequence([moveAction, deleteAction])
+        
+        enemy.run(combine)
+    }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
