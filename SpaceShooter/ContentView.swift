@@ -14,6 +14,7 @@ class GameScene: SKScene {
     let background = SKSpriteNode(imageNamed: "stars-background")
     var player = SKSpriteNode()
     var playerFire = SKSpriteNode()
+    var enemy = SKSpriteNode()
     
     var fireTimer = Timer()
     
@@ -61,6 +62,8 @@ class GameScene: SKScene {
         
         playerFire.run(combine)
     }
+    
+    @objc func makeEnemies() {}
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         for touch in touches {
