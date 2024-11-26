@@ -4,17 +4,20 @@
 //
 //  Created by Arman Yerkeshev on 25.11.2024.
 //
-
 import SwiftUI
 import SwiftData
 import SpriteKit
 import GameKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
+    
     let background = SKSpriteNode(imageNamed: "stars-background")
     var player = SKSpriteNode()
     var playerFire = SKSpriteNode()
     var enemy = SKSpriteNode()
+    
+    var score = 0
+    var scoreLabel = SKLabelNode()
     
     var fireTimer = Timer()
     var enemyTimer = Timer()
@@ -40,9 +43,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         fireTimer = .scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(playerFireFunction), userInfo: nil, repeats: true)
         
         enemyTimer = .scheduledTimer(timeInterval: 1, target: self, selector: #selector(makeEnemy), userInfo: nil, repeats: true)
+    
+        scoreLabel.text = "Score: \(score)"
+        scoreLabel.fontName = "Chalkduster"
+        scoreLabel.fontSize = 50
+        scoreLabel.fontColor = .red
+        scoreLabel.zPosition = 99
+        scoreLabel.position = CGPoint(x: size.width / 2, y: size.height / 1.2)
+        addChild(scoreLabel)
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
+        print("Contact detected: \(contact.bodyA.categoryBitMask) with \(contact.bodyB.categoryBitMask)")
+
         let contactA : SKPhysicsBody
         let contactB : SKPhysicsBody
         
@@ -54,9 +67,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             contactB = contact.bodyA
         }
         
+        // Player hits the enemy
         if contactA.categoryBitMask == CBitmask.playerFire && contactB.categoryBitMask == CBitmask.enemyShip {
             
-            playerFireHitEmeny(fires: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
+            updateScore()
+            
+            playerFireHitEnemy(fires: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
             
         }
         
@@ -77,7 +93,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(explo!)
     }
 
-    func playerFireHitEmeny(fires: SKSpriteNode, enemys: SKSpriteNode) {
+    func playerFireHitEnemy(fires: SKSpriteNode, enemys: SKSpriteNode) {
         fires.removeFromParent()
         enemys.removeFromParent()
 
@@ -118,7 +134,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         playerFire.zPosition = 3
         playerFire.physicsBody = SKPhysicsBody(rectangleOf: playerFire.size)
         playerFire.physicsBody?.affectedByGravity = false
-        playerFire.physicsBody?.categoryBitMask = CBitmask.playerShip
+        playerFire.physicsBody?.categoryBitMask = CBitmask.playerFire
         playerFire.physicsBody?.contactTestBitMask = CBitmask.enemyShip
         playerFire.physicsBody?.collisionBitMask = CBitmask.enemyShip
         
@@ -143,7 +159,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         enemy.physicsBody?.affectedByGravity = false
         enemy.physicsBody?.categoryBitMask = CBitmask.enemyShip
         enemy.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
-        enemy.physicsBody?.collisionBitMask = CBitmask.playerFire | CBitmask.playerFire
+        enemy.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
         addChild(enemy)
         
         let moveAction = SKAction.moveTo(y: -100, duration: 3)
@@ -151,6 +167,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let combine = SKAction.sequence([moveAction, deleteAction])
         
         enemy.run(combine)
+    }
+    
+    func updateScore() {
+        score += 1
+        print("Score updated: \(score)")
+        scoreLabel.text = "Score: \(score)"
+        
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
