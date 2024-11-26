@@ -18,9 +18,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var score = 0
     var scoreLabel = SKLabelNode()
-    
+    var livesArray = [SKSpriteNode]()
     var fireTimer = Timer()
     var enemyTimer = Timer()
+    
     
     struct CBitmask {
         static let playerShip: UInt32 = 0b1 //1
@@ -48,13 +49,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreLabel.fontName = "Chalkduster"
         scoreLabel.fontSize = 50
         scoreLabel.fontColor = .red
-        scoreLabel.zPosition = 99
+        scoreLabel.zPosition = 10
         scoreLabel.position = CGPoint(x: size.width / 2, y: size.height / 1.2)
         addChild(scoreLabel)
+        
+        addLives(lives: 3)
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
-        print("Contact detected: \(contact.bodyA.categoryBitMask) with \(contact.bodyB.categoryBitMask)")
 
         let contactA : SKPhysicsBody
         let contactB : SKPhysicsBody
@@ -67,7 +69,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             contactB = contact.bodyA
         }
         
-        // Player hits the enemy
+        // Player shoots the enemy
         if contactA.categoryBitMask == CBitmask.playerFire && contactB.categoryBitMask == CBitmask.enemyShip {
             
             updateScore()
@@ -76,9 +78,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
         }
         
+        // Enemy hits the player
         if contactA.categoryBitMask == CBitmask.playerShip && contactB.categoryBitMask == CBitmask.enemyShip {
             
-            playerHitEnemy(players: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
+            player.run(SKAction.repeat(SKAction.sequence([SKAction.fadeOut(withDuration: 0.1), SKAction.fadeIn(withDuration: 0.1)]), count: 8))
+            
+            contactB.node?.removeFromParent()
+            
+            // Remove lives from right to left
+            if let lastLife = livesArray.popLast() {
+                lastLife.removeFromParent()
+            }
+            
+            if livesArray.isEmpty {
+                player.removeFromParent()
+                fireTimer.invalidate()
+                enemyTimer.invalidate()
+            }
             
         }
     }
@@ -101,6 +117,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         explo?.position = enemys.position
         explo?.zPosition = 5
         addChild(explo!)
+    }
+    
+    func addLives(lives: Int) {
+        for i in 1...lives {
+            let life = SKSpriteNode(imageNamed: "heart")
+            life.size = CGSizeMake(100.0, 70.0)
+            life.setScale(0.6)
+            life.position = CGPoint(x: CGFloat(i) * life.size.width + 25, y: size.height - life.size.height - 50)
+            life.zPosition = 10
+            life.name = "life\(i)"
+            livesArray.append(life)
+            
+            addChild(life)
+            
+        }
     }
     
     func makePlayer(playerCh: Int) {
@@ -171,7 +202,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func updateScore() {
         score += 1
-        print("Score updated: \(score)")
         scoreLabel.text = "Score: \(score)"
         
     }
