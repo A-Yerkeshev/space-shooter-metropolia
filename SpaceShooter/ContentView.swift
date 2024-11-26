@@ -9,12 +9,14 @@ import SwiftData
 import SpriteKit
 import GameKit
 
-class GameScene: SKScene, SKPhysicsContactDelegate {
+class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     
     let background = SKSpriteNode(imageNamed: "stars-background")
     var player = SKSpriteNode()
     var playerFire = SKSpriteNode()
     var enemy = SKSpriteNode()
+    
+    @Published var gameOver = false
     
     var score = 0
     var scoreLabel = SKLabelNode()
@@ -39,7 +41,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         background.zPosition = 1
         addChild(background)
         
-        makePlayer(playerCh: 1)
+        makePlayer(playerCh: shipChoice.integer(forKey: "playerChoice"))
         
         fireTimer = .scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(playerFireFunction), userInfo: nil, repeats: true)
         
@@ -94,6 +96,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 player.removeFromParent()
                 fireTimer.invalidate()
                 enemyTimer.invalidate()
+                gameOverFunc()
             }
             
         }
@@ -141,9 +144,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         case 1:
             shipName = "ship_1"
         case 2:
-            shipName = "ship_5"
-        default:
+            shipName = "ship_4"
+        case 3:
             shipName = "ship_6"
+        default:
+            shipName = "ship_2"
         }
         
         player = .init(imageNamed: shipName)
@@ -213,14 +218,44 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player.position.x = location.x
         }
     }
+    
+    func gameOverFunc() {
+        removeAllChildren()
+        gameOver = true
+        
+        let gameOverLabel = SKLabelNode(fontNamed: "Chalkduster")
+        gameOverLabel.text = "Game Over"
+        gameOverLabel.position = CGPoint(x: size.width / 2, y: (size.height / 2) + 75)
+        gameOverLabel.fontSize = 80
+        gameOverLabel.fontColor = UIColor.red
+        
+        addChild(gameOverLabel)
+    }
 }
 
 struct ContentView: View {
-    let scene = GameScene()
+    @ObservedObject var scene = GameScene()
 
     var body: some View {
-        SpriteView(scene: scene)
-            .ignoresSafeArea()
+        NavigationView {
+            HStack {
+                ZStack {
+                    SpriteView(scene: scene)
+                        .ignoresSafeArea()
+                    
+                    if scene.gameOver == true {
+                        NavigationLink {
+                            StartView().navigationBarHidden(true).navigationBarBackButtonHidden(true)
+                        } label: {
+                            Text("Back to Start")
+                                .font(.custom("Chalkduster", size: 30))
+                                .foregroundColor(Color(UIColor.red))
+                            }
+                    }
+                }
+            }
+        }
+        
     }
 }
 
