@@ -56,17 +56,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if contactA.categoryBitMask == CBitmask.playerShip && contactB.categoryBitMask == CBitmask.enemyShip {
             
-            enemy.removeFromParent()
-            playerFire.removeFromParent()
+            playerFireHitEmeny(fires: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
             
         }
         
         if contactA.categoryBitMask == CBitmask.playerShip && contactB.categoryBitMask == CBitmask.enemyShip {
             
-            enemy.removeFromParent()
-            player.removeFromParent()
+            playerHitEnemy(players: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
             
         }
+    }
+    
+    func playerHitEnemy(players: SKSpriteNode, enemys: SKSpriteNode) {
+        players.removeFromParent()
+        enemys.removeFromParent()
+
+        let explo = SKEmitterNode(fileNamed: "ExplosionOne")
+        explo?.position = players.position
+        explo?.zPosition = 5
+        addChild(explo!)
+    }
+
+    func playerFireHitEmeny(fires: SKSpriteNode, enemys: SKSpriteNode) {
+        fires.removeFromParent()
+        enemys.removeFromParent()
+
+        let explo = SKEmitterNode(fileNamed: "ExplosionOne")
+        explo?.position = enemys.position
+        explo?.zPosition = 5
+        addChild(explo!)
     }
     
     func makePlayer(playerCh: Int) {
@@ -125,7 +143,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         enemy.physicsBody?.affectedByGravity = false
         enemy.physicsBody?.categoryBitMask = CBitmask.enemyShip
         enemy.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
-        enemy.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
+        enemy.physicsBody?.collisionBitMask = CBitmask.playerFire | CBitmask.playerFire
         addChild(enemy)
         
         let moveAction = SKAction.moveTo(y: -100, duration: 3)
