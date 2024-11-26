@@ -54,7 +54,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             contactB = contact.bodyA
         }
         
-        if contactA.categoryBitMask == CBitmask.playerShip && contactB.categoryBitMask == CBitmask.enemyShip {
+        if contactA.categoryBitMask == CBitmask.playerFire && contactB.categoryBitMask == CBitmask.enemyShip {
             
             playerFireHitEmeny(fires: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
             
