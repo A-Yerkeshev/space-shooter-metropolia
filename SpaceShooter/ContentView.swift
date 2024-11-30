@@ -16,14 +16,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var playerFire = SKSpriteNode()
     var enemy = SKSpriteNode()
     var bossOne = SKSpriteNode()
+    var bossOneFire = SKSpriteNode()
     
     @Published var gameOver = false
     
     var score = 0
     var scoreLabel = SKLabelNode()
     var livesArray = [SKSpriteNode]()
+
     var fireTimer = Timer()
     var enemyTimer = Timer()
+    var bossOneFireTimer = Timer()
     
     
     struct CBitmask {
@@ -103,6 +106,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         if score == 5 {
             makeBossOne()
             enemyTimer.invalidate()
+            bossOndeFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
         }
 
     }
@@ -193,6 +197,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         addChild(bossOne)
 
     }
+
+    @objc func bossOneFireFunc(){
+        bossOneFire = .init(imageNamed: "shot")
+        bossOneFire.position = bossOne.position
+        bossOneFire.zPosition = 5
+        bossOneFire.setScale(1.5)
+
+        let move1 = SKAction.moveTo(y: 0 - bossOneFire.size.height, duration: 1.5)
+        let removeAction = SKAction.removeFromParent()
+
+        let sequence = SKAction.sequence([move1, removeAction])
+        bossOneFire.run(sequence)
+
+        addChild(bossOneFire)
+    }
+
     
     @objc func playerFireFunction() {
         playerFire = .init(imageNamed: "shot")
