@@ -15,6 +15,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var player = SKSpriteNode()
     var playerFire = SKSpriteNode()
     var enemy = SKSpriteNode()
+    var bossOne = SKSpriteNode()
     
     @Published var gameOver = false
     
@@ -98,8 +99,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 enemyTimer.invalidate()
                 gameOverFunc()
             }
-            
         }
+        if score == 5 {
+            makeBossOne()
+            enemyTimer.invalidate()
+        }
+
     }
     
     func playerHitEnemy(players: SKSpriteNode, enemys: SKSpriteNode) {
@@ -162,6 +167,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         player.physicsBody?.contactTestBitMask = CBitmask.enemyShip
         player.physicsBody?.collisionBitMask = CBitmask.enemyShip
         addChild(player)
+    }
+
+    func makeBossOne(){
+        bossOne = .init(imageNamed: "ship_5")
+        bossOne.position = CGPoint(x: size.width / 2, y: size.height + bossOne.size.height)
+        bossOne.zPosition = 10
+        bossOne.setScale(1.6)
+
+        let move1 = SKAction.moveTo(y: size.height / 1.3, duration: 2)
+        let move2 = SKAction.moveTo(x: size.width - bossOne.size.width / 2, duration: 2)
+        let move3 = SKAction.moveTo(x: 0 + bossOne.size.width / 2, duration: 2)
+        let move4 = SKAction.moveTo(x: size.width / 2, duration: 1.5)
+        let move5 = SKAction.fadeOut(withDuration: 0.2)
+        let move6 = SKAction.fadeIn(withDuration: 0.2)
+        let move7 = SKAction.moveTo(y: 0 + bossOne.size.height / 2, duration: 2)
+        let move8 = SKAction.moveTo(y: size.height / 1.3, duration: 2)
+
+        let action = SKAction.repeat(SKAction.sequence([move5, move6]), count: 6)
+        let repeatForever = SKAction.repeatForever(SKAction.sequence([move2, move3, move4, action, move7, move8]))
+        let sequence = SKAction.sequence([move1,repeatForever])
+
+        bossOne.run(sequence)
+
+        addChild(bossOne)
+
     }
     
     @objc func playerFireFunction() {
