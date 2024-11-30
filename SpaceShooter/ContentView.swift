@@ -81,6 +81,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             updateScore()
             
             playerFireHitEnemy(fires: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
+
+            if score == 5 {
+            makeBossOne()
+            enemyTimer.invalidate()
+            bossOndeFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
+        }
             
         }
         
@@ -103,11 +109,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 gameOverFunc()
             }
         }
-        if score == 5 {
-            makeBossOne()
-            enemyTimer.invalidate()
-            bossOndeFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
-        }
+        
 
     }
     
