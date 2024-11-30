@@ -87,7 +87,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             if score == 5 {
                 makeBossOne()
                 enemyTimer.invalidate()
-                bossOndeFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
+                bossOneFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
             }
             
         }
@@ -212,7 +212,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         bossOne.physicsBody = SKPhysicsBody(rectangleOf: bossOne.size)
         bossOne.physicsBody?.affectedByGravity = false
         bossOne.physicsBody?.categoryBitMask = CBitmask.bossOne
-        bossOner.physicsBody?.contactTestBitMask = CBitmask.enemyShip
+        bossOne.physicsBody?.contactTestBitMask = CBitmask.enemyShip
         bossOne.physicsBody?.collisionBitMask = CBitmask.enemyShip
 
         let move1 = SKAction.moveTo(y: size.height / 1.3, duration: 2)
