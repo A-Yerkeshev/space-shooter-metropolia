@@ -27,6 +27,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var fireTimer = Timer()
     var enemyTimer = Timer()
     var bossOneFireTimer = Timer()
+    var bossOneLives = 25
     
     
     struct CBitmask {
@@ -43,6 +44,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         background.position = CGPoint(x: size.width / 2, y: size.height / 2)
         background.setScale(2.1)
         background.zPosition = 1
+        background.alpha = 0.6
         addChild(background)
         
         makePlayer(playerCh: shipChoice.integer(forKey: "playerChoice"))
@@ -83,10 +85,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             playerFireHitEnemy(fires: contactA.node as! SKSpriteNode, enemys: contactB.node as! SKSpriteNode)
 
             if score == 5 {
-            makeBossOne()
-            enemyTimer.invalidate()
-            bossOndeFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
-        }
+                makeBossOne()
+                enemyTimer.invalidate()
+                bossOndeFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
+            }
             
         }
         
@@ -109,7 +111,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 gameOverFunc()
             }
         }
-        
+
+        if contactA.categoryBitMask == CBitmask.playerFire && contactB.categoryBitMask == CBitmask.bossOne {
+            
+            let explo = SKEmitterNode(fileNamed: "ExplosionOne")
+            explo?.position = contactA.node!.position
+            explo?.zPosition = 5
+            addChild(explo!)
+
+            contactA.node?.removeFromParent()
+
+            bossOneLives -= 1
+
+            if bossOneLives == 0 {
+
+                let explo = SKEmitterNode(fileNamed: "ExplosionOne")
+                explo?.position = contactB.node!.position
+                explo?.zPosition = 5
+                explo?.setScale(2)
+                addChild(explo!)
+
+                contactB.node?.removeFromParent()
+                bossOneFireTimer.invalidate()
+                enemyTimer = Timer.scheduledTimer(timeInterval: 0.7, target: self, selector: 
+                    #selector(makeEnemy), userInfo: nil, repeats: true)
+            }
+            
+        }
+
 
     }
     
@@ -180,6 +209,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         bossOne.position = CGPoint(x: size.width / 2, y: size.height + bossOne.size.height)
         bossOne.zPosition = 10
         bossOne.setScale(1.6)
+        bossOne.physicsBody = SKPhysicsBody(rectangleOf: bossOne.size)
+        bossOne.physicsBody?.affectedByGravity = false
+        bossOne.physicsBody?.categoryBitMask = CBitmask.bossOne
+        bossOner.physicsBody?.contactTestBitMask = CBitmask.enemyShip
+        bossOne.physicsBody?.collisionBitMask = CBitmask.enemyShip
 
         let move1 = SKAction.moveTo(y: size.height / 1.3, duration: 2)
         let move2 = SKAction.moveTo(x: size.width - bossOne.size.width / 2, duration: 2)
@@ -223,8 +257,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         playerFire.physicsBody = SKPhysicsBody(rectangleOf: playerFire.size)
         playerFire.physicsBody?.affectedByGravity = false
         playerFire.physicsBody?.categoryBitMask = CBitmask.playerFire
-        playerFire.physicsBody?.contactTestBitMask = CBitmask.enemyShip
-        playerFire.physicsBody?.collisionBitMask = CBitmask.enemyShip
+        playerFire.physicsBody?.contactTestBitMask = CBitmask.enemyShip | CBitmask.bossOne
+        playerFire.physicsBody?.collisionBitMask = CBitmask.enemyShip | CBitmask.bossOne
         
         addChild(playerFire)
         
