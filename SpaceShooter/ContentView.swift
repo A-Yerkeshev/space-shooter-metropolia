@@ -28,6 +28,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var bossOneFireTimer = Timer()
     var bossOneLives = 15
     
+    var isPlayerInvulnerable = false
+
+    
     struct CBitmask {
         static let playerShip: UInt32 = 0b1 // 1
         static let playerFire: UInt32 = 0b10 // 2
@@ -124,6 +127,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     }
     
     func handlePlayerDamage(contactB: SKPhysicsBody) {
+        if isPlayerInvulnerable {
+                    return // Ignore damage while player is invulnerable
+        }
+        
+        isPlayerInvulnerable = true
         player.run(SKAction.repeat(SKAction.sequence([SKAction.fadeOut(withDuration: 0.1), SKAction.fadeIn(withDuration: 0.1)]), count: 8))
 
         contactB.node?.removeFromParent()
@@ -138,6 +146,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             enemyTimer.invalidate()
             bossOneFireTimer.invalidate()
             gameOverFunc()
+        }
+        
+        // Set a delay of 1 second for invulnerability (to avoid issues while colliding with boss)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.isPlayerInvulnerable = false
         }
     }
     

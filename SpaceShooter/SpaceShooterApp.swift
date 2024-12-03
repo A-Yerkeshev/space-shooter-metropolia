@@ -12,7 +12,7 @@ import SwiftData
 struct SpaceShooterApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            StartView()
         }
     }
 }
