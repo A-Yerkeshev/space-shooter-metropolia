@@ -188,7 +188,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         case 3:
             shipName = "ship_6"
         default:
-            shipName = "ship_2"
+            shipName = "ship_5"
         }
         
         player = .init(imageNamed: shipName)
@@ -205,11 +205,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     }
 
     func makeBossOne(){
-        bossOne = .init(imageNamed: "ship_5")
+        bossOne = .init(imageNamed: "ship_2")
         bossOne.position = CGPoint(x: size.width / 2, y: size.height + bossOne.size.height)
         bossOne.zPosition = 10
-        bossOne.setScale(1.6)
-        bossOne.physicsBody = SKPhysicsBody(rectangleOf: bossOne.size)
+        bossOne.setScale(5)
+        bossOne.zRotation = .pi
+        //bossOne.physicsBody = SKPhysicsBody(rectangleOf: bossOne.size)
+        let customPhysicsBodySize = CGSize(width: 170, height: 220) // perfect size for boss ship_2
+        bossOne.physicsBody = SKPhysicsBody(rectangleOf: customPhysicsBodySize)
         bossOne.physicsBody?.affectedByGravity = false
         bossOne.physicsBody?.categoryBitMask = CBitmask.bossOne
         bossOne.physicsBody?.contactTestBitMask = CBitmask.enemyShip
