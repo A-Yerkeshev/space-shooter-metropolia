@@ -19,6 +19,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var enemy = SKSpriteNode()
     var bossOne = SKSpriteNode()
     var bossOneFire = SKSpriteNode()
+    var enemiesDestroyed = 0
+    var bossNumber = 1
     
     @Published var gameOver = false
     
@@ -135,7 +137,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 
                 contactB.node?.removeFromParent()
                 bossOneFireTimer.invalidate()
+                
                 enemyTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(makeEnemy), userInfo: nil, repeats: true)
+                
+
+                bossNumber += 1
             }
         }
     }
@@ -176,7 +182,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         explo?.position = enemys.position
         explo?.zPosition = 5
         addChild(explo!)
+        
+        enemiesDestroyed += 1
+        updateScore()
+        checkForBossSpawn()
     }
+    func checkForBossSpawn() {
+            let enemiesPerBoss = 10
+
+            if enemiesDestroyed >= enemiesPerBoss {
+                enemiesDestroyed = 0
+                spawnBoss()
+                enemyTimer.invalidate()
+            }
+        }
+
+        func spawnBoss() {
+            bossOneLives = 15 + (bossNumber * 5)
+            makeBossOne()
+            bossOneFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
+        }
     
     func addLives(lives: Int) {
         for i in 1...lives {
@@ -345,8 +370,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
 
 struct ContentView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.presentationMode) var presentationMode
     @ObservedObject var scene = GameScene()
-    @State private var showLeaderboard = false
+    var onGameOver: () -> Void
 
     var body: some View {
         NavigationView {
@@ -355,15 +381,12 @@ struct ContentView: View {
                     .ignoresSafeArea()
                 
                 if scene.gameOver {
-                    GameOverView(score: scene.score) { playerName in
-                        scene.saveScore(playerName: playerName, context: context)
-                        showLeaderboard = true
-                    }
-                }
-                
-                NavigationLink(destination: LeaderboardView(), isActive: $showLeaderboard) {
-                    EmptyView()
-                }
+                                GameOverView(score: scene.score) { playerName in
+                                    scene.saveScore(playerName: playerName, context: context)
+                                    presentationMode.wrappedValue.dismiss()
+                                    onGameOver()
+                                }
+                            }
             }
             .onAppear {
                 scene.modelContext = context
@@ -374,5 +397,5 @@ struct ContentView: View {
 }
 
         #Preview {
-            ContentView()
+            ContentView(onGameOver: {})
         }

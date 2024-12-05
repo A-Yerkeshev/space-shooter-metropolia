@@ -18,16 +18,16 @@ struct GameOverView: View {
             
             VStack(spacing: 20) {
                 Text("Game Over")
-                    .font(.custom("Chalkduster", size: 60))
+                    .font(.custom("Chalkduster", size: 40))
                     .foregroundColor(.red)
                     .padding(.top, 50)
                 
                 Text("Your Score: \(score)")
-                    .font(.custom("Chalkduster", size: 40))
+                    .font(.custom("Chalkduster", size: 30))
                     .foregroundColor(.white)
                 
                 TextField("Enter your name", text: $playerName)
-                    .font(.custom("Chalkduster", size: 25))
+                    .font(.custom("Chalkduster", size: 20))
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                     .background(Color.white)
@@ -38,7 +38,7 @@ struct GameOverView: View {
                     onSubmit(playerName.isEmpty ? "Anonymous" : playerName)
                 }) {
                     Text("Submit")
-                        .font(.custom("Chalkduster", size: 30))
+                        .font(.custom("Chalkduster", size: 20))
                         .foregroundColor(.white)
                         .padding()
                         .background(Color.red)
@@ -52,5 +52,7 @@ struct GameOverView: View {
         }
     }
 }
+
+
 
 
