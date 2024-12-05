@@ -7,8 +7,11 @@
 import SwiftUI
 import SpriteKit
 import GameKit
+import SwiftData
 
 class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
+    
+    var modelContext: ModelContext?
     
     let background = SKSpriteNode(imageNamed: "stars-background")
     var player = SKSpriteNode()
@@ -37,6 +40,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         static let enemyShip: UInt32 = 0b100 // 4
         static let bossOne: UInt32 = 0b1000 // 8
         static let bossFire: UInt32 = 0b10000 // 16
+    }
+    
+    func saveScore(playerName: String, context: ModelContext) {
+        let newScore = BestScore(name: playerName, score: score, date: Date())
+        context.insert(newScore)
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save the score: \(error)")
+        }
     }
     
     override func didMove(to view: SKView) {
@@ -324,10 +338,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 gameOverLabel.fontColor = UIColor.red
                 
                 addChild(gameOverLabel)
+                
+                DispatchQueue.main.async {
+                        let alert = UIAlertController(
+                            title: "Game Over",
+                            message: "Enter your name for the leaderboard",
+                            preferredStyle: .alert
+                        )
+                        alert.addTextField { textField in
+                            textField.placeholder = "Your Name"
+                        }
+                        let submitAction = UIAlertAction(title: "Submit", style: .default) { [weak self] _ in
+                            guard let self = self,
+                                  let playerName = alert.textFields?.first?.text,
+                                  let context = self.modelContext else { return }
+                            self.saveScore(playerName: playerName.isEmpty ? "Anonymous" : playerName, context: context)
+                        }
+                        alert.addAction(submitAction)
+                        UIApplication.shared.windows.first?.rootViewController?.present(alert, animated: true)
+                    }
+                    
             }
         }
 
         struct ContentView: View {
+            @Environment(\.modelContext) private var context
             @ObservedObject var scene = GameScene()
 
             var body: some View {
@@ -347,6 +382,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                                 }
                             }
                         }
+                        .onAppear {
+                                        scene.modelContext = context
+                                    }
                     }
                 }
             }

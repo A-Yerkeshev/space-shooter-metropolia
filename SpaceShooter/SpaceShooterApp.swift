@@ -13,6 +13,7 @@ struct SpaceShooterApp: App {
     var body: some Scene {
         WindowGroup {
             StartView()
+                .modelContainer(for: [BestScore.self])
         }
     }
 }

@@ -42,6 +42,18 @@ struct StartView: View {
                     }
                     Spacer()
                     
+                    NavigationLink {
+                        LeaderboardView()
+                    } label: {
+                        Text("Leaderboard")
+                            .font(.custom("Chalkduster", size: 30))
+                            .foregroundColor(.white)
+                            .padding(.top, 50)
+                    }
+                    
+                    Spacer()
+
+                    
                     Text("Choose your ship")
                         .font(.custom("Chalkduster", size: 20))
                         .foregroundColor(Color(red: 1.0, green: 0.0, blue: 0.0))
