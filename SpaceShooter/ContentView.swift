@@ -339,56 +339,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 
                 addChild(gameOverLabel)
                 
-                DispatchQueue.main.async {
-                        let alert = UIAlertController(
-                            title: "Game Over",
-                            message: "Enter your name for the leaderboard",
-                            preferredStyle: .alert
-                        )
-                        alert.addTextField { textField in
-                            textField.placeholder = "Your Name"
-                        }
-                        let submitAction = UIAlertAction(title: "Submit", style: .default) { [weak self] _ in
-                            guard let self = self,
-                                  let playerName = alert.textFields?.first?.text,
-                                  let context = self.modelContext else { return }
-                            self.saveScore(playerName: playerName.isEmpty ? "Anonymous" : playerName, context: context)
-                        }
-                        alert.addAction(submitAction)
-                        UIApplication.shared.windows.first?.rootViewController?.present(alert, animated: true)
-                    }
                     
             }
         }
 
-        struct ContentView: View {
-            @Environment(\.modelContext) private var context
-            @ObservedObject var scene = GameScene()
+struct ContentView: View {
+    @Environment(\.modelContext) private var context
+    @ObservedObject var scene = GameScene()
+    @State private var showLeaderboard = false
 
-            var body: some View {
-                NavigationView {
-                    HStack {
-                        ZStack {
-                            SpriteView(scene: scene)
-                                .ignoresSafeArea()
-                            
-                            if scene.gameOver == true {
-                                NavigationLink {
-                                    StartView().navigationBarHidden(true).navigationBarBackButtonHidden(true)
-                                } label: {
-                                    Text("Back to Start")
-                                        .font(.custom("Chalkduster", size: 30))
-                                        .foregroundColor(Color(UIColor.red))
-                                }
-                            }
-                        }
-                        .onAppear {
-                                        scene.modelContext = context
-                                    }
+    var body: some View {
+        NavigationView {
+            ZStack {
+                SpriteView(scene: scene)
+                    .ignoresSafeArea()
+                
+                if scene.gameOver {
+                    GameOverView(score: scene.score) { playerName in
+                        scene.saveScore(playerName: playerName, context: context)
+                        showLeaderboard = true
                     }
                 }
+                
+                NavigationLink(destination: LeaderboardView(), isActive: $showLeaderboard) {
+                    EmptyView()
+                }
+            }
+            .onAppear {
+                scene.modelContext = context
             }
         }
+        .navigationBarHidden(true)
+    }
+}
 
         #Preview {
             ContentView()

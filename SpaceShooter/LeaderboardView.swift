@@ -8,22 +8,40 @@ import SwiftUI
 import SwiftData
 
 struct LeaderboardView: View {
+    @Environment(\.presentationMode) var presentationMode
     @Query(sort: \BestScore.score, order: .reverse) var bestScores: [BestScore]
 
     var body: some View {
         ZStack {
-            // Background Image
             Image("spaceShooterMenu")
                 .resizable()
                 .scaledToFill()
                 .ignoresSafeArea()
 
             VStack {
-                Text("Leaderboard")
-                    .font(.custom("Chalkduster", size: 45))
-                    .fontWeight(.bold)
-                    .foregroundColor(Color(red: 1.0, green: 0.0, blue: 0.0))
-                    .padding(.top, 20)
+                HStack {
+                                    Button(action: {
+                                        presentationMode.wrappedValue.dismiss()
+                                    }) {
+                                        HStack {
+                                            Image(systemName: "chevron.left")
+                                                .font(.system(size: 20, weight: .bold))
+                                                .foregroundColor(.white)
+                                            Text("Back")
+                                                .font(.custom("Chalkduster", size: 30))
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                    Spacer()
+                                }
+                                .padding(.horizontal)
+                                .padding(.top, 50)
+                                
+                                Text("Leaderboard")
+                                    .font(.custom("Chalkduster", size: 45))
+                                    .fontWeight(.bold)
+                                    .foregroundColor(Color(red: 1.0, green: 0.0, blue: 0.0))
+                                    .padding(.top, 20)
 
                 List(bestScores) { score in
                     HStack {
@@ -44,9 +62,10 @@ struct LeaderboardView: View {
                 .listStyle(PlainListStyle())
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
+                .padding(.horizontal, 16)
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
     }
 }
 

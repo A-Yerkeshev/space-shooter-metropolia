@@ -37,10 +37,9 @@ struct StartView: View {
                         Text("Start Game")
                             .font(.custom("Chalkduster", size: 30))
                             .foregroundColor(.white)
-                            .padding(.top, 50)
+                            .padding(.top, 40)
                         
                     }
-                    Spacer()
                     
                     NavigationLink {
                         LeaderboardView()
@@ -48,10 +47,8 @@ struct StartView: View {
                         Text("Leaderboard")
                             .font(.custom("Chalkduster", size: 30))
                             .foregroundColor(.white)
-                            .padding(.top, 50)
+                            .padding(.top, 20)
                     }
-                    
-                    Spacer()
 
                     
                     Text("Choose your ship")
