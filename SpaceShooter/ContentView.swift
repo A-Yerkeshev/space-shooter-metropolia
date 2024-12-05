@@ -7,8 +7,11 @@
 import SwiftUI
 import SpriteKit
 import GameKit
+import SwiftData
 
 class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
+    
+    var modelContext: ModelContext?
     
     let background = SKSpriteNode(imageNamed: "stars-background")
     var player = SKSpriteNode()
@@ -16,6 +19,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var enemy = SKSpriteNode()
     var bossOne = SKSpriteNode()
     var bossOneFire = SKSpriteNode()
+    var enemiesDestroyed = 0
+    var bossNumber = 1
     
     @Published var gameOver = false
     
@@ -37,6 +42,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         static let enemyShip: UInt32 = 0b100 // 4
         static let bossOne: UInt32 = 0b1000 // 8
         static let bossFire: UInt32 = 0b10000 // 16
+    }
+    
+    func saveScore(playerName: String, context: ModelContext) {
+        let newScore = BestScore(name: playerName, score: score, date: Date())
+        context.insert(newScore)
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save the score: \(error)")
+        }
     }
     
     override func didMove(to view: SKView) {
@@ -121,7 +137,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 
                 contactB.node?.removeFromParent()
                 bossOneFireTimer.invalidate()
+                
                 enemyTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(makeEnemy), userInfo: nil, repeats: true)
+                
+
+                bossNumber += 1
             }
         }
     }
@@ -162,7 +182,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         explo?.position = enemys.position
         explo?.zPosition = 5
         addChild(explo!)
+        
+        enemiesDestroyed += 1
+        updateScore()
+        checkForBossSpawn()
     }
+    func checkForBossSpawn() {
+            let enemiesPerBoss = 10
+
+            if enemiesDestroyed >= enemiesPerBoss {
+                enemiesDestroyed = 0
+                spawnBoss()
+                enemyTimer.invalidate()
+            }
+        }
+
+        func spawnBoss() {
+            bossOneLives = 15 + (bossNumber * 5)
+            makeBossOne()
+            bossOneFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
+        }
     
     func addLives(lives: Int) {
         for i in 1...lives {
@@ -324,34 +363,39 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 gameOverLabel.fontColor = UIColor.red
                 
                 addChild(gameOverLabel)
+                
+                    
             }
         }
 
-        struct ContentView: View {
-            @ObservedObject var scene = GameScene()
+struct ContentView: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.presentationMode) var presentationMode
+    @ObservedObject var scene = GameScene()
+    var onGameOver: () -> Void
 
-            var body: some View {
-                NavigationView {
-                    HStack {
-                        ZStack {
-                            SpriteView(scene: scene)
-                                .ignoresSafeArea()
-                            
-                            if scene.gameOver == true {
-                                NavigationLink {
-                                    StartView().navigationBarHidden(true).navigationBarBackButtonHidden(true)
-                                } label: {
-                                    Text("Back to Start")
-                                        .font(.custom("Chalkduster", size: 30))
-                                        .foregroundColor(Color(UIColor.red))
+    var body: some View {
+        NavigationView {
+            ZStack {
+                SpriteView(scene: scene)
+                    .ignoresSafeArea()
+                
+                if scene.gameOver {
+                                GameOverView(score: scene.score) { playerName in
+                                    scene.saveScore(playerName: playerName, context: context)
+                                    presentationMode.wrappedValue.dismiss()
+                                    onGameOver()
                                 }
                             }
-                        }
-                    }
-                }
+            }
+            .onAppear {
+                scene.modelContext = context
             }
         }
+        .navigationBarHidden(true)
+    }
+}
 
         #Preview {
-            ContentView()
+            ContentView(onGameOver: {})
         }

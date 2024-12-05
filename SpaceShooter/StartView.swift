@@ -11,6 +11,9 @@ import SpriteKit
 var shipChoice = UserDefaults.standard
 
 struct StartView: View {
+    @State private var showGameView = false
+    @State private var showLeaderboard = false
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -29,18 +32,22 @@ struct StartView: View {
                         .padding(.top, 250)
                     
                     Spacer()
-                    NavigationLink {
-                        ContentView()
-                            .navigationBarHidden(true)
-                            .navigationBarBackButtonHidden(true)
-                    } label: {
+                    Button(action: {
+                        showGameView = true
+                        }) {
                         Text("Start Game")
-                            .font(.custom("Chalkduster", size: 30))
-                            .foregroundColor(.white)
-                            .padding(.top, 50)
-                        
-                    }
-                    Spacer()
+                                .font(.custom("Chalkduster", size: 30))
+                                .foregroundColor(.white)
+                    }.padding(10)
+
+                    Button(action: {
+                        showLeaderboard = true
+                        }) {
+                        Text("Leaderboard")
+                                    .font(.custom("Chalkduster", size: 30))
+                                    .foregroundColor(.white)
+                        }.padding(10)
+
                     
                     Text("Choose your ship")
                         .font(.custom("Chalkduster", size: 20))
@@ -75,10 +82,20 @@ struct StartView: View {
                         .padding(6)
                     }
                     
-                }
-            }
-        }
-    }
+                    NavigationLink(destination: LeaderboardView(), isActive: $showLeaderboard) {
+                                            EmptyView()
+                                        }
+                                    }
+                                }
+                                .fullScreenCover(isPresented: $showGameView) {
+                                    ContentView(onGameOver: {
+                                        showLeaderboard = true
+                                    })
+                                    .navigationBarHidden(true)
+                                    .navigationBarBackButtonHidden(true)
+                                }
+                            }
+                        }
     
     func makePlayerChoice() {
         shipChoice.set(1, forKey: "playerChoice")
