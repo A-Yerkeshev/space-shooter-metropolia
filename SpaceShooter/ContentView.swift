@@ -28,14 +28,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var score = 0
     var scoreLabel = SKLabelNode()
     var livesArray = [SKSpriteNode]()
-
+    
     var fireTimer = Timer()
     var enemyTimer = Timer()
     var bossOneFireTimer = Timer()
     var bossOneLives = 15
     
     var isPlayerInvulnerable = false
-
+    
     
     struct CBitmask {
         static let playerShip: UInt32 = 0b1 // 1
@@ -48,7 +48,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     func saveScore(playerName: String, context: ModelContext) {
         let newScore = BestScore(name: playerName, score: score, date: Date())
         context.insert(newScore)
-
+        
         do {
             try context.save()
         } catch {
@@ -71,7 +71,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         fireTimer = .scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(playerFireFunction), userInfo: nil, repeats: true)
         
         enemyTimer = .scheduledTimer(timeInterval: 1, target: self, selector: #selector(makeEnemy), userInfo: nil, repeats: true)
-    
+        
         scoreLabel.text = "Score: \(score)"
         scoreLabel.fontName = "Chalkduster"
         scoreLabel.fontSize = 50
@@ -96,9 +96,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             contactB = contact.bodyA
         }
         
-    // Ignore collisions if the player is invulnerable
+        // Ignore collisions if the player is invulnerable
         if isPlayerInvulnerable &&
-           (contactA.categoryBitMask == CBitmask.playerShip || contactB.categoryBitMask == CBitmask.playerShip) {
+            (contactA.categoryBitMask == CBitmask.playerShip || contactB.categoryBitMask == CBitmask.playerShip) {
             return
         }
         
@@ -113,17 +113,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 bossOneFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
             }
         }
-
+        
         // Enemy hits the player
         if contactA.categoryBitMask == CBitmask.playerShip && contactB.categoryBitMask == CBitmask.enemyShip {
             handlePlayerDamage(contactB: contactB)
         }
-
+        
         // Boss fire hits the player
         if contactA.categoryBitMask == CBitmask.playerShip && contactB.categoryBitMask == CBitmask.bossFire {
             handlePlayerDamage(contactB: contactB)
         }
-
+        
         // Player shoots the boss
         if contactA.categoryBitMask == CBitmask.playerFire && contactB.categoryBitMask == CBitmask.bossOne {
             let explo = SKEmitterNode(fileNamed: "ExplosionOne")
@@ -147,11 +147,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 
                 enemyTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(makeEnemy), userInfo: nil, repeats: true)
                 
-
+                
                 if livesArray.count < 3 {
                     addLives(lives: 1)
                 }
-
+                
                 bossNumber += 1
             }
         }
@@ -164,7 +164,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             if isPlayerInvulnerable {
                 playerBody.collisionBitMask = 0 // Disable physical collisions for the player
                 playerBody.contactTestBitMask = 0 // Disable contact detection for the player
-
+                
             } else {
                 playerBody.collisionBitMask = CBitmask.enemyShip | CBitmask.bossOne | CBitmask.bossFire
                 playerBody.contactTestBitMask = CBitmask.enemyShip | CBitmask.bossOne | CBitmask.bossFire
@@ -182,7 +182,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                     enemyNode.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
                     enemyNode.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
                     enemyNode.physicsBody?.isDynamic = true
-
+                    
                 }
             }
             
@@ -200,7 +200,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             }
         }
     }
-
+    
     
     func handlePlayerDamage(contactB: SKPhysicsBody) {
         if isPlayerInvulnerable {
@@ -211,13 +211,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         updatePhysicsMasks() // Update masks when invulnerability starts
         
         player.run(SKAction.repeat(SKAction.sequence([SKAction.fadeOut(withDuration: 0.1), SKAction.fadeIn(withDuration: 0.1)]), count: 10))
-
+        
         contactB.node?.removeFromParent()
         
         if let lastLife = livesArray.popLast() {
             lastLife.removeFromParent()
         }
-
+        
         if livesArray.isEmpty {
             player.removeFromParent()
             fireTimer.invalidate()
@@ -236,7 +236,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     func playerFireHitEnemy(fires: SKSpriteNode, enemys: SKSpriteNode) {
         fires.removeFromParent()
         enemys.removeFromParent()
-
+        
         let explo = SKEmitterNode(fileNamed: "ExplosionOne")
         explo?.position = enemys.position
         explo?.zPosition = 5
@@ -247,20 +247,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         checkForBossSpawn()
     }
     func checkForBossSpawn() {
-            let enemiesPerBoss = 10
+        let enemiesPerBoss = 10
 
-            if enemiesDestroyed >= enemiesPerBoss {
-                enemiesDestroyed = 0
-                spawnBoss()
-                enemyTimer.invalidate()
-            }
+        if enemiesDestroyed >= enemiesPerBoss {
+            enemiesDestroyed = 0
+            spawnBoss()
+            enemyTimer.invalidate()
         }
+    }
 
-        func spawnBoss() {
-            bossOneLives = 15 + (bossNumber * 5)
-            makeBossOne()
-            bossOneFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
-        }
+    func spawnBoss() {
+        bossOneLives = 15 + (bossNumber * 5)
+        makeBossOne()
+        bossOneFireTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(bossOneFireFunc), userInfo: nil, repeats: true)
+    }
     
     func addLives(lives: Int) {
         for _ in 1...lives {
@@ -339,7 +339,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
 
         addChild(bossOne)
     }
-
+    
     @objc func bossOneFireFunc() {
         bossOneFire = .init(imageNamed: "turbo_blue")
         bossOneFire.position = bossOne.position
@@ -387,67 +387,67 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         let combine = SKAction.sequence([moveAction, deleteAction])
         
         playerFire.run(combine)
-            }
-            
-            @objc func makeEnemy() {
-                let randomNumber = GKRandomDistribution(lowestValue: 50, highestValue: 700)
-                
-                enemy = .init(imageNamed: "ship_3")
-                enemy.position = CGPoint(x: randomNumber.nextInt(), y: 1400)
-                enemy.zPosition = 5
-                enemy.setScale(2.8)
-                enemy.zRotation = 3.14159
-                enemy.physicsBody = SKPhysicsBody(rectangleOf: enemy.size)
-                enemy.physicsBody?.affectedByGravity = false
-                enemy.physicsBody?.allowsRotation = false
-                enemy.physicsBody?.categoryBitMask = CBitmask.enemyShip
-                
-                // Adjust physics based on player's invulnerability state (for newly spawned enemies)
-                if isPlayerInvulnerable {
-                    enemy.physicsBody?.isDynamic = false
-                    enemy.physicsBody?.contactTestBitMask = 0
-                    enemy.physicsBody?.collisionBitMask = 0
-                } else {
-                    enemy.physicsBody?.isDynamic = true
-                    enemy.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
-                    enemy.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
-                }
-                addChild(enemy)
-                
-                let moveAction = SKAction.moveTo(y: -100, duration: 3)
-                let deleteAction = SKAction.removeFromParent()
-                let combine = SKAction.sequence([moveAction, deleteAction])
-                
-                enemy.run(combine)
-            }
-            
-            func updateScore() {
-                score += 1
-                scoreLabel.text = "Score: \(score)"
-            }
-            
-            override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-                for touch in touches {
-                    let location = touch.location(in: self)
-                    player.position.x = location.x
-                }
-            }
-            
-            func gameOverFunc() {
-                removeAllChildren()
-                gameOver = true
-                
-                let gameOverLabel = SKLabelNode(fontNamed: "Chalkduster")
-                gameOverLabel.text = "Game Over"
-                gameOverLabel.position = CGPoint(x: size.width / 2, y: (size.height / 2) + 75)
-                gameOverLabel.fontSize = 80
-                gameOverLabel.fontColor = UIColor.red
-                
-                addChild(gameOverLabel)
-                
-                    
-            }
+    }
+    
+    @objc func makeEnemy() {
+        let randomNumber = GKRandomDistribution(lowestValue: 50, highestValue: 700)
+        
+        enemy = .init(imageNamed: "ship_3")
+        enemy.position = CGPoint(x: randomNumber.nextInt(), y: 1400)
+        enemy.zPosition = 5
+        enemy.setScale(2.8)
+        enemy.zRotation = 3.14159
+        enemy.physicsBody = SKPhysicsBody(rectangleOf: enemy.size)
+        enemy.physicsBody?.affectedByGravity = false
+        enemy.physicsBody?.allowsRotation = false
+        enemy.physicsBody?.categoryBitMask = CBitmask.enemyShip
+        
+        // Adjust physics based on player's invulnerability state (for newly spawned enemies)
+        if isPlayerInvulnerable {
+            enemy.physicsBody?.isDynamic = false
+            enemy.physicsBody?.contactTestBitMask = 0
+            enemy.physicsBody?.collisionBitMask = 0
+        } else {
+            enemy.physicsBody?.isDynamic = true
+            enemy.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
+            enemy.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
         }
+        addChild(enemy)
+        
+        let moveAction = SKAction.moveTo(y: -100, duration: 3)
+        let deleteAction = SKAction.removeFromParent()
+        let combine = SKAction.sequence([moveAction, deleteAction])
+        
+        enemy.run(combine)
+    }
+    
+    func updateScore() {
+        score += 1
+        scoreLabel.text = "Score: \(score)"
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for touch in touches {
+            let location = touch.location(in: self)
+            player.position.x = location.x
+        }
+    }
+    
+    func gameOverFunc() {
+        removeAllChildren()
+        gameOver = true
+        
+        let gameOverLabel = SKLabelNode(fontNamed: "Chalkduster")
+        gameOverLabel.text = "Game Over"
+        gameOverLabel.position = CGPoint(x: size.width / 2, y: (size.height / 2) + 75)
+        gameOverLabel.fontSize = 80
+        gameOverLabel.fontColor = UIColor.red
+        
+        addChild(gameOverLabel)
+        
+        
+    }
+}
 
 struct ContentView: View {
     @Environment(\.modelContext) private var context
@@ -456,18 +456,18 @@ struct ContentView: View {
     var onGameOver: () -> Void
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 SpriteView(scene: scene)
                     .ignoresSafeArea()
                 
                 if scene.gameOver {
-                                GameOverView(score: scene.score) { playerName in
-                                    scene.saveScore(playerName: playerName, context: context)
-                                    presentationMode.wrappedValue.dismiss()
-                                    onGameOver()
-                                }
-                            }
+                    GameOverView(score: scene.score) { playerName in
+                        scene.saveScore(playerName: playerName, context: context)
+                        presentationMode.wrappedValue.dismiss()
+                        onGameOver()
+                    }
+                }
             }
             .onAppear {
                 scene.modelContext = context
@@ -477,6 +477,6 @@ struct ContentView: View {
     }
 }
 
-        #Preview {
-            ContentView(onGameOver: {})
-        }
+#Preview {
+    ContentView(onGameOver: {})
+}
