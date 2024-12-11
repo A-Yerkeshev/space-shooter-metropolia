@@ -1,10 +1,3 @@
-//
-//  StartView.swift
-//  SpaceShooter
-//
-//  Created by Andrii Deshko on 26.11.2024.
-//
-
 import SwiftUI
 import SpriteKit
 
@@ -15,7 +8,7 @@ struct StartView: View {
     @State private var showLeaderboard = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Image("spaceShooterMenu")
                     .resizable()
@@ -32,27 +25,30 @@ struct StartView: View {
                         .padding(.top, 250)
                     
                     Spacer()
+                    
                     Button(action: {
                         showGameView = true
-                        }) {
+                    }) {
                         Text("Start Game")
-                                .font(.custom("Chalkduster", size: 30))
-                                .foregroundColor(.white)
-                    }.padding(10)
-
+                            .font(.custom("Chalkduster", size: 30))
+                            .foregroundColor(.white)
+                    }
+                    .padding(10)
+                    
                     Button(action: {
                         showLeaderboard = true
-                        }) {
+                    }) {
                         Text("Leaderboard")
-                                    .font(.custom("Chalkduster", size: 30))
-                                    .foregroundColor(.white)
-                        }.padding(10)
-
+                            .font(.custom("Chalkduster", size: 30))
+                            .foregroundColor(.white)
+                    }
+                    .padding(10)
                     
                     Text("Choose your ship")
                         .font(.custom("Chalkduster", size: 20))
                         .foregroundColor(Color(red: 1.0, green: 0.0, blue: 0.0))
                         .padding(20)
+                    
                     HStack {
                         Button {
                             makePlayerChoice()
@@ -81,21 +77,20 @@ struct StartView: View {
                         }
                         .padding(6)
                     }
-                    
-                    NavigationLink(destination: LeaderboardView(), isActive: $showLeaderboard) {
-                                            EmptyView()
-                                        }
-                                    }
-                                }
-                                .fullScreenCover(isPresented: $showGameView) {
-                                    ContentView(onGameOver: {
-                                        showLeaderboard = true
-                                    })
-                                    .navigationBarHidden(true)
-                                    .navigationBarBackButtonHidden(true)
-                                }
-                            }
-                        }
+                }
+                .navigationDestination(isPresented: $showLeaderboard) {
+                    LeaderboardView()
+                }
+                .fullScreenCover(isPresented: $showGameView) {
+                    ContentView(onGameOver: {
+                        showLeaderboard = true
+                    })
+                    .navigationBarHidden(true)
+                    .navigationBarBackButtonHidden(true)
+                }
+            }
+        }
+    }
     
     func makePlayerChoice() {
         shipChoice.set(1, forKey: "playerChoice")
@@ -109,8 +104,6 @@ struct StartView: View {
         shipChoice.set(3, forKey: "playerChoice")
     }
 }
-
-
 
 #Preview {
     StartView()
