@@ -19,6 +19,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
     var enemy = SKSpriteNode()
     var bossOne = SKSpriteNode()
     var bossOneFire = SKSpriteNode()
+    var playerLives = 3
     var enemiesDestroyed = 0
     var bossNumber = 1
     
@@ -79,7 +80,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         scoreLabel.position = CGPoint(x: size.width / 2, y: size.height / 1.2)
         addChild(scoreLabel)
         
-        addLives(lives: 3)
+        addLives(lives: playerLives)
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
@@ -140,6 +141,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 
                 enemyTimer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(makeEnemy), userInfo: nil, repeats: true)
                 
+
+                if livesArray.count < 3 {
+                    addLives(lives: 1)
+                }
 
                 bossNumber += 1
             }
@@ -204,11 +209,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         }
     
     func addLives(lives: Int) {
-        for i in 1...lives {
+        for _ in 1...lives {
             let life = SKSpriteNode(imageNamed: "heart")
             life.size = CGSize(width: 100.0, height: 70.0)
             life.setScale(0.6)
-            life.position = CGPoint(x: CGFloat(i) * life.size.width + 25, y: size.height - life.size.height - 50)
+            // Calculate the position based on the current count of livesArray to add when boss destroyed
+                    life.position = CGPoint(
+                        x: CGFloat(livesArray.count + 1) * life.size.width + 25,
+                        y: size.height - life.size.height - 50
+                    )
             life.zPosition = 10
             livesArray.append(life)
             
