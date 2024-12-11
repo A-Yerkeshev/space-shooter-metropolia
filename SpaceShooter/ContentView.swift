@@ -96,6 +96,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             contactB = contact.bodyA
         }
         
+    // Ignore collisions if the player is invulnerable
+        if isPlayerInvulnerable &&
+           (contactA.categoryBitMask == CBitmask.playerShip || contactB.categoryBitMask == CBitmask.playerShip) {
+            return
+        }
+        
         // Player shoots the enemy
         if contactA.categoryBitMask == CBitmask.playerFire && contactB.categoryBitMask == CBitmask.enemyShip {
             updateScore()
@@ -151,13 +157,60 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         }
     }
     
+    
+    func updatePhysicsMasks() {
+        // Update the player's physics body
+        if let playerBody = player.physicsBody {
+            if isPlayerInvulnerable {
+                playerBody.collisionBitMask = 0 // Disable physical collisions for the player
+                playerBody.contactTestBitMask = 0 // Disable contact detection for the player
+
+            } else {
+                playerBody.collisionBitMask = CBitmask.enemyShip | CBitmask.bossOne | CBitmask.bossFire
+                playerBody.contactTestBitMask = CBitmask.enemyShip | CBitmask.bossOne | CBitmask.bossFire
+            }
+        }
+        // Update all enemies
+        for node in children {
+            if let enemyNode = node as? SKSpriteNode, enemyNode.physicsBody?.categoryBitMask == CBitmask.enemyShip {
+                enemyNode.physicsBody?.isDynamic = !isPlayerInvulnerable
+                if isPlayerInvulnerable {
+                    enemyNode.physicsBody?.contactTestBitMask = 0
+                    enemyNode.physicsBody?.collisionBitMask = 0
+                    enemyNode.physicsBody?.isDynamic = false // Ensure enemies do not react to collisions
+                } else {
+                    enemyNode.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
+                    enemyNode.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
+                    enemyNode.physicsBody?.isDynamic = true
+
+                }
+            }
+            
+            // Update boss projectiles
+            if let projectileNode = node as? SKSpriteNode, projectileNode.physicsBody?.categoryBitMask == CBitmask.bossFire {
+                if isPlayerInvulnerable {
+                    projectileNode.physicsBody?.contactTestBitMask = 0
+                    projectileNode.physicsBody?.collisionBitMask = 0
+                    projectileNode.physicsBody?.isDynamic = false // Ensure projectiles are not affected by collisions
+                } else {
+                    projectileNode.physicsBody?.contactTestBitMask = CBitmask.playerShip
+                    projectileNode.physicsBody?.collisionBitMask = CBitmask.playerShip
+                    projectileNode.physicsBody?.isDynamic = true
+                }
+            }
+        }
+    }
+
+    
     func handlePlayerDamage(contactB: SKPhysicsBody) {
         if isPlayerInvulnerable {
-                    return // Ignore damage while player is invulnerable
+            return // Ignore damage while player is invulnerable
         }
         
         isPlayerInvulnerable = true
-        player.run(SKAction.repeat(SKAction.sequence([SKAction.fadeOut(withDuration: 0.1), SKAction.fadeIn(withDuration: 0.1)]), count: 8))
+        updatePhysicsMasks() // Update masks when invulnerability starts
+        
+        player.run(SKAction.repeat(SKAction.sequence([SKAction.fadeOut(withDuration: 0.1), SKAction.fadeIn(withDuration: 0.1)]), count: 10))
 
         contactB.node?.removeFromParent()
         
@@ -173,9 +226,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             gameOverFunc()
         }
         
-        // Set a delay of 1 second for invulnerability (to avoid issues while colliding with boss)
+        // Set a delay of 1 second for invulnerability after loosing a life(colliding with boss/enemy)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.isPlayerInvulnerable = false
+            self.updatePhysicsMasks()
         }
     }
     
@@ -214,10 +268,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
             life.size = CGSize(width: 100.0, height: 70.0)
             life.setScale(0.6)
             // Calculate the position based on the current count of livesArray to add when boss destroyed
-                    life.position = CGPoint(
-                        x: CGFloat(livesArray.count + 1) * life.size.width + 25,
-                        y: size.height - life.size.height - 50
-                    )
+            life.position = CGPoint(
+                x: CGFloat(livesArray.count + 1) * life.size.width + 25,
+                y: size.height - life.size.height - 50
+            )
             life.zPosition = 10
             livesArray.append(life)
             
@@ -294,10 +348,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
         bossOneFire.zRotation = .pi
         bossOneFire.physicsBody = SKPhysicsBody(rectangleOf: bossOneFire.size)
         bossOneFire.physicsBody?.affectedByGravity = false
-        bossOneFire.physicsBody?.isDynamic = true
+        bossOneFire.physicsBody?.allowsRotation = false // Prevent rotation
+        bossOneFire.physicsBody?.isDynamic = true // Ensure the projectile moves
         bossOneFire.physicsBody?.categoryBitMask = CBitmask.bossFire // New bitmask for boss fire
-        bossOneFire.physicsBody?.contactTestBitMask = CBitmask.playerShip // Detect collision with player only
-        bossOneFire.physicsBody?.collisionBitMask = CBitmask.playerShip // Only collide with player
+        
+        // Adjust physics based on player's invulnerability state
+        if isPlayerInvulnerable {
+            bossOneFire.physicsBody?.contactTestBitMask = 0
+            bossOneFire.physicsBody?.collisionBitMask = 0
+        } else {
+            bossOneFire.physicsBody?.contactTestBitMask = CBitmask.playerShip // Detect collision with player
+            bossOneFire.physicsBody?.collisionBitMask = CBitmask.playerShip   // Allow collision with player
+        }
 
         let move1 = SKAction.moveTo(y: 0 - bossOneFire.size.height, duration: 1.5)
         let removeAction = SKAction.removeFromParent()
@@ -337,9 +399,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate, ObservableObject {
                 enemy.zRotation = 3.14159
                 enemy.physicsBody = SKPhysicsBody(rectangleOf: enemy.size)
                 enemy.physicsBody?.affectedByGravity = false
+                enemy.physicsBody?.allowsRotation = false
                 enemy.physicsBody?.categoryBitMask = CBitmask.enemyShip
-                enemy.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
-                enemy.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
+                
+                // Adjust physics based on player's invulnerability state (for newly spawned enemies)
+                if isPlayerInvulnerable {
+                    enemy.physicsBody?.isDynamic = false
+                    enemy.physicsBody?.contactTestBitMask = 0
+                    enemy.physicsBody?.collisionBitMask = 0
+                } else {
+                    enemy.physicsBody?.isDynamic = true
+                    enemy.physicsBody?.contactTestBitMask = CBitmask.playerShip | CBitmask.playerFire
+                    enemy.physicsBody?.collisionBitMask = CBitmask.playerShip | CBitmask.playerFire
+                }
                 addChild(enemy)
                 
                 let moveAction = SKAction.moveTo(y: -100, duration: 3)
